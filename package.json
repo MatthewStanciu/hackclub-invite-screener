@@ -1,0 +1,18 @@
+{
+  "name": "hackclub-invite-screener",
+  "version": "1.0.0",
+  "description": "Invites or denies new requests to join the hack club slack",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "MatthewStanciu",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/bolt": "^2.0.1",
+    "airtable-plus": "^1.0.4",
+    "axios": "^0.19.2",
+    "qs": "^6.9.4"
+  }
+}
