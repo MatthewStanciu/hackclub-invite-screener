@@ -15,88 +15,66 @@ const joinTable = new AirtablePlus({
 
 app.action('invite_member', async ({ ack, body }) => {
   await ack();
-
-  let email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
-  let ts = body.message.ts
-
-  let args = qs.stringify({
-    token: process.env.LEGACY_TOKEN,
-    email: email
-  })
-  axios({
-    method: 'post',
-    url: `https://slack.com/api/users.admin.invite?${args}`
-  }).catch(err => console.log(err))
-
-  let record = (await joinTable.read({
-    filterByFormula: `{Email Address} = '${email}'`,
-    maxRecords: 1
-  }))[0]
-  await joinTable.update(record.id, {
-    'Invited': true
-  })
-
-  await app.client.chat.update({
-    token: process.env.BOT_TOKEN,
-    ts: ts,
-    channel: 'G0132DNFE7J',
-    blocks: [body.message.blocks[0], body.message.blocks[1],
-    {
-      "type": "actions",
-      "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "emoji": true,
-            "text": "Invitation Sent"
-          },
-          "action_id": "mimmiggie"
-        }
-      ]
-    }]
-  })
+  updateInvitationStatus(body, 'Invitation Sent')
 });
 
 app.action('deny', async ({ ack, body }) => {
   await ack();
-
-  let email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
-  let ts = body.message.ts
-
-  let record = (await joinTable.read({
-    filterByFormula: `{Email Address} = '${email}'`,
-    maxRecords: 1
-  }))[0]
-  await joinTable.update(record.id, {
-    'Denied': true
-  })
-
-  await app.client.chat.update({
-    token: process.env.BOT_TOKEN,
-    ts: ts,
-    channel: 'G0132DNFE7J',
-    blocks: [body.message.blocks[0], body.message.blocks[1],
-    {
-      "type": "actions",
-      "elements": [
-        {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "emoji": true,
-            "text": "Denied"
-          },
-          "action_id": "mimmiggie"
-        }
-      ]
-    }]
-  }).catch(err => console.log(err))
+  updateInvitationStatus(body, 'Denied')
 });
 
 app.action('mimmiggie', ({ ack, body }) => {
   ack();
 });
+
+async function updateInvitationStatus(body, status) {
+  let email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
+  let ts = body.message.ts
+
+  let record = (await joinTable.read({
+    filterByFormula: `{Email Address} = '${email}'`,
+    maxRecords: 1
+  }))[0]
+
+  if (status === 'Invitation Sent') {
+    await joinTable.update(record.id, {
+      'Invited': true
+    })
+
+    let args = qs.stringify({
+      token: process.env.LEGACY_TOKEN,
+      email: email
+    })
+    axios({
+      method: 'post',
+      url: `https://slack.com/api/users.admin.invite?${args}`
+    }).catch(err => console.log(err))
+  } else {
+    await joinTable.update(record.id, {
+      'Denied': true
+    })
+  }
+  await app.client.chat.update({
+    token: process.env.BOT_TOKEN,
+    ts: ts,
+    channel: 'G0132DNFE7J',
+    blocks: [body.message.blocks[0], body.message.blocks[1],
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "emoji": true,
+            "text": status
+          },
+          "action_id": "mimmiggie"
+        }
+      ]
+    }]
+  }).catch(err => console.log(err))
+}
 
 (async () => {
   await app.start(process.env.PORT || 3000);
