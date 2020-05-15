@@ -61,7 +61,16 @@ app.action('invite_member', async ({ ack, body }) => {
 app.action('deny', async ({ ack, body }) => {
   await ack();
 
+  let email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
   let ts = body.message.ts
+
+  let record = (await joinTable.read({
+    filterByFormula: `{Email Address} = '${email}'`,
+    maxRecords: 1
+  }))[0]
+  await joinTable.update(record.id, {
+    'Denied': true
+  })
 
   await app.client.chat.update({
     token: process.env.BOT_TOKEN,
