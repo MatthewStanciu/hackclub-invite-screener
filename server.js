@@ -25,7 +25,6 @@ app.action('deny', async ({ ack, body }) => {
 
 app.action('mimmiggie', ({ ack, body }) => {
   ack();
-  updateInvitationStatus(body, 'Invitation Sent')
 });
 
 async function updateInvitationStatus(body, status) {
@@ -41,7 +40,6 @@ async function updateInvitationStatus(body, status) {
     filterByFormula: `{Email Address} = '${email}'`,
     maxRecords: 1
   }))[0]
-  console.log(record)
 
   if (status === 'Invitation Sent') {
     await joinTable.update(record.id, {
