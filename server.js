@@ -25,16 +25,23 @@ app.action('deny', async ({ ack, body }) => {
 
 app.action('mimmiggie', ({ ack, body }) => {
   ack();
+  updateInvitationStatus(body, 'Invitation Sent')
 });
 
 async function updateInvitationStatus(body, status) {
-  let email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
+  let email
+  try {
+    email = body.message.blocks[1].text.text.split('Email:')[1].split('|')[1].split('>')[0]
+  } catch {
+    email = body.message.blocks[1].text.text.split('Email:*')[1].split('*')[0].split('\n')[0].split(' ')[1]
+  }
   let ts = body.message.ts
 
   let record = (await joinTable.read({
     filterByFormula: `{Email Address} = '${email}'`,
     maxRecords: 1
   }))[0]
+  console.log(record)
 
   if (status === 'Invitation Sent') {
     await joinTable.update(record.id, {
