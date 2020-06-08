@@ -72,7 +72,7 @@ async function updateInvitationStatus(body, status) {
           "text": {
             "type": "plain_text",
             "emoji": true,
-            "text": status
+            "text": status === 'Invitation Sent' ? `Invitation sent by @${body.user.name}` : `Denied by @${body.user.name}`
           },
           "action_id": "mimmiggie"
         }
